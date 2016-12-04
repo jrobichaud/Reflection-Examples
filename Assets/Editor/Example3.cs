@@ -12,7 +12,6 @@ namespace TestNamespace{
 	}
 }
 
-
 public class Ex3_Voyeurism {
 	
 	[Test]
@@ -45,5 +44,16 @@ public class Ex3_Voyeurism {
 		field.SetValue(config, "dirty" );
 		Assert.AreNotEqual( config.BadConstant, "pristine" );
 		Assert.AreEqual( config.BadConstant, "dirty" );
+	}
+	[Test]
+	public void CanAccessAssemblies(){
+		//var val = UnityEditorInternal.WebURLs.unity; // <-- this line does not compile
+		var unaccessibleClass = Type.GetType("UnityEditorInternal.WebURLs,UnityEditor");
+		Assert.IsNotNull( unaccessibleClass );
+
+		var property = unaccessibleClass.GetProperty( "unity", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public );
+		Assert.IsNotNull( property );
+		var value = property.GetValue( null, new object[]{}) as string;
+		Assert.AreEqual( value, "http://www.unity3d.com" );
 	}
 }
