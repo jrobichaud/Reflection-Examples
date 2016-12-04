@@ -9,15 +9,6 @@ namespace TestNamespace{
 		static internal string Foo(){
 			return "Bar";
 		}
-
-	}
-	public static class Config{
-		private static string _badConstant = "pristine";
-		internal static string BadConstant{
-			get{
-				return _badConstant;
-			}
-		}
 	}
 }
 
@@ -33,13 +24,26 @@ public class Ex3_Voyeurism {
 		Assert.AreEqual(method.Invoke(null, new object[]{}), "Bar");
 	}
 
+	public class Config{
+		private string _badConstant = "pristine";
+		internal string BadConstant{
+			get{
+				return _badConstant;
+			}
+		}
+	}
+
 	[Test]
 	public void CanManipulatePrivateParts() {
-		Assert.AreEqual( TestNamespace.Config.BadConstant, "pristine" );
-		var field = typeof(TestNamespace.Config).GetField("_badConstant", System.Reflection.BindingFlags.NonPublic| System.Reflection.BindingFlags.Static);
-		Assert.AreEqual( field.GetValue(null), "pristine" );
-		field.SetValue(null, "dirty" );
-		Assert.AreNotEqual( TestNamespace.Config.BadConstant, "pristine" );
-		Assert.AreEqual( TestNamespace.Config.BadConstant, "dirty" );
+		var config = new Config();
+		Assert.AreEqual( config.BadConstant, "pristine" );
+
+		var field = typeof(Config).GetField("_badConstant", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+		Assert.IsNotNull( field );
+		Assert.AreEqual( field.GetValue(config), "pristine" );
+
+		field.SetValue(config, "dirty" );
+		Assert.AreNotEqual( config.BadConstant, "pristine" );
+		Assert.AreEqual( config.BadConstant, "dirty" );
 	}
 }
