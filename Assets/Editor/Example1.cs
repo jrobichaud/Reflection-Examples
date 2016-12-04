@@ -1,13 +1,12 @@
-﻿using UnityEngine;
-using UnityEditor;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using System;
 using System.Reflection;
 
-public class Example1 {
+public class Ex1_WikipediaExample {
 	class Foo{
+		public bool Invoked{ get; private set; }
 		public void hello() {
-			Debug.Log("Hello");
+			Invoked = true;
 		}
 	}
 	[Test]
@@ -30,5 +29,8 @@ public class Example1 {
 		// Invocation de la méthode via réflexion
 		MethodInfo method = type.GetMethod("hello");
 		method.Invoke(instance, new object[]{});
+
+		Assert.IsInstanceOf<Foo>( instance );
+		Assert.IsTrue(((Foo)instance).Invoked);
 	}
 }

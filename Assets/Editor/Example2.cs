@@ -1,18 +1,16 @@
-﻿using UnityEngine;
-using UnityEditor;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-public class Example2 {
+public class Ex2_MessageHandling {
 
 	interface IHandler{
 		string Handle(string message);
 	}
 
-	[System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple=true)]
-	sealed class Handle: System.Attribute {
+	[System.AttributeUsage(AttributeTargets.Class, AllowMultiple=true)]
+	sealed class Handle: Attribute {
 		public string MessageType{get;set;}
 		public Handle( string messageType ) {
 			MessageType = messageType;		
@@ -42,16 +40,16 @@ public class Example2 {
 
 	class NullHandler : IHandler{
 		public string Handle( string message ) {
-			return "Null: " + message;
+			return "Nope";
 		}
 	}
 
 
-	Dictionary<string, System.Type> messageTypesToHandler = new Dictionary<string, System.Type>();
+	Dictionary<string, Type> messageTypesToHandler = new Dictionary<string, Type>();
 
 	void CreateCache() {
 		// Do search for these private types only in this class
-		foreach ( var type in typeof( Example2 ).GetNestedTypes(BindingFlags.NonPublic) ) {
+		foreach ( var type in typeof( Ex2_MessageHandling ).GetNestedTypes(BindingFlags.NonPublic) ) {
 			if ( typeof(IHandler).IsAssignableFrom( type ) ) {
 				foreach ( Handle handle in type.GetCustomAttributes( typeof( Handle ), false ) ) {
 					messageTypesToHandler.Add( handle.MessageType, type );
@@ -67,15 +65,23 @@ public class Example2 {
 		else
 			return new NullHandler();
 	}
-
-	[Test]
-	public void EditorTest() {
+	public Ex2_MessageHandling(){
 		CreateCache();
-
+	}
+	[Test]
+	public void DispatchMessagesCorretly() {
 		Assert.AreEqual( GetHandler("Foo").Handle( "This message is for foo" ), "Foo: This message is for foo" );
 		Assert.AreEqual( GetHandler("Bar").Handle( "This message is for bar" ), "Bar: This message is for bar" );
 		Assert.AreEqual( GetHandler("Bar2").Handle( "This message is for bar" ), "Bar: This message is for bar" );
-		Assert.AreEqual( GetHandler("Unknown handler").Handle( "DERP" ), "Null: DERP" );
-		Assert.AreEqual( GetHandler("Invalid").Handle( "Nope" ), "Null: Nope" );
+	}
+
+	[Test]
+	public void FailsGracefullyWithBadData(){
+		Assert.DoesNotThrow( ()=> GetHandler("jkhfsgjhsdjghjdshgjhdgjh").Handle("ajsgjasjgdhjhgjdhfgjdhgj") );
+	}
+
+	[Test]
+	public void DoesNotDispatchToClassThatDoesNotInheritFromIHandler(){
+		Assert.IsInstanceOf<NullHandler>( GetHandler("Invalid") );
 	}
 }
