@@ -1,14 +1,14 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using System.Reflection;
+﻿using UnityEngine;
+using UnityEditor;
+using NUnit.Framework;
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 
-public class Example2 : MonoBehaviour {
-
+public class Example2 {
 
 	interface IHandler{
-		void Handle(string message);
+		string Handle(string message);
 	}
 
 	[System.AttributeUsage(System.AttributeTargets.Class, AllowMultiple=true)]
@@ -20,31 +20,32 @@ public class Example2 : MonoBehaviour {
 	}
 	[Handle("Foo")]
 	class FooHandler : IHandler{
-		public void Handle( string message ) {
-			Debug.Log( "Foo: " + message );
+		public string Handle( string message ) {
+			return "Foo: " + message;
 		}		
 	}
 
 	[Handle("Bar")]
 	[Handle("Bar2")]
 	class Handler : IHandler{
-		public void Handle( string message ) {
-			Debug.Log( "Bar: " + message );
+		public string Handle( string message ) {
+			return "Bar: " + message;
 		}
 	}
 
 	[Handle("Invalid")]
-	class InvalidHandler {
-		public void Handle( string message ) {
-			Debug.Log( "Bar: " + message );
+	class InvalidHandler { // : IHandler{ <-- this is intentional
+		public string Handle( string message ) {
+			throw new ExecutionEngineException();
 		}
 	}
 
 	class NullHandler : IHandler{
-		public void Handle( string message ) {
-			Debug.Log( "Null handler: " + message );
+		public string Handle( string message ) {
+			return "Null: " + message;
 		}
 	}
+
 
 	Dictionary<string, System.Type> messageTypesToHandler = new Dictionary<string, System.Type>();
 
@@ -67,17 +68,14 @@ public class Example2 : MonoBehaviour {
 			return new NullHandler();
 	}
 
-	// Use this for initialization
-	void Start () {
+	[Test]
+	public void EditorTest() {
 		CreateCache();
-		GetHandler("Foo").Handle( "This message is for foo" );
-		GetHandler("Bar").Handle( "This message is for bar" );
-		GetHandler("Bar2").Handle( "This message is for bar as well" );
-		GetHandler("Invalid handler").Handle( "DERP" );
-	}
-	
-	// Update is called once per frame
-	void Update () {
-		
+
+		Assert.AreEqual( GetHandler("Foo").Handle( "This message is for foo" ), "Foo: This message is for foo" );
+		Assert.AreEqual( GetHandler("Bar").Handle( "This message is for bar" ), "Bar: This message is for bar" );
+		Assert.AreEqual( GetHandler("Bar2").Handle( "This message is for bar" ), "Bar: This message is for bar" );
+		Assert.AreEqual( GetHandler("Unknown handler").Handle( "DERP" ), "Null: DERP" );
+		Assert.AreEqual( GetHandler("Invalid").Handle( "Nope" ), "Null: Nope" );
 	}
 }
