@@ -45,8 +45,28 @@ public class Ex3_Voyeurism {
 		Assert.AreNotEqual( config.BadConstant, "pristine" );
 		Assert.AreEqual( config.BadConstant, "dirty" );
 	}
+
+	// Pro tips: Bury reflection's complexity inside tested classes to avoid regressions with Unity updates
+	static class PlayerSettingsExtension {
+		public static string cloudProjectId	{
+			set {
+				var property = typeof(PlayerSettings).GetProperty( "cloudProjectId" );
+				var setMethod = property.GetSetMethod( true );
+				setMethod.Invoke( null, new object[]{ value });
+			}
+		}
+	}
+
 	[Test]
-	public void CanAccessAssemblies(){
+	public void UnityKnowsWhatIsGoodForYou___OrNot(){
+		Assert.AreEqual( PlayerSettings.cloudProjectId, "" );
+		PlayerSettingsExtension.cloudProjectId = "12345";
+		Assert.AreEqual( PlayerSettings.cloudProjectId, "12345" );
+		PlayerSettingsExtension.cloudProjectId = "";
+	}
+
+	[Test]
+	public void CanAccessAssembliesAsWell() {
 		//var val = UnityEditorInternal.WebURLs.unity; // <-- this line does not compile
 		var unaccessibleClass = Type.GetType("UnityEditorInternal.WebURLs,UnityEditor");
 		Assert.IsNotNull( unaccessibleClass );
