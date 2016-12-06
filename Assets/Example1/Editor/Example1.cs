@@ -10,7 +10,7 @@ public class Ex1_WikipediaExample {
 		}
 	}
 	[Test]
-	public void EditorTest() {
+	public void CanDoSomeStuff() {
 		//https://fr.wikipedia.org/wiki/R%C3%A9flexion_(informatique)#Exemple
 		// Sans utiliser la réflexion
 		Foo foo = new Foo();

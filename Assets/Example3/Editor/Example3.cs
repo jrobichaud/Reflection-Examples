@@ -1,5 +1,4 @@
-﻿using UnityEngine;
-using UnityEditor;
+﻿using UnityEditor;
 using NUnit.Framework;
 using System;
 
@@ -23,7 +22,7 @@ public class Ex3_Voyeurism {
 		Assert.AreEqual(method.Invoke(null, new object[]{}), "Bar");
 	}
 
-	public class Config{
+	sealed public class Config{
 		private string _badConstant = "pristine";
 		internal string BadConstant{
 			get{
@@ -75,5 +74,36 @@ public class Ex3_Voyeurism {
 		Assert.IsNotNull( property );
 		var value = property.GetValue( null, new object[]{}) as string;
 		Assert.AreEqual( value, "http://www.unity3d.com" );
+	}
+}
+
+
+class Ex3_ExtensionMethods{
+	internal sealed class Config{
+		private string _badConstant = "pristine";
+		internal string BadConstant{
+			get{
+				return _badConstant;
+			}
+		}
+	}
+
+	[Test]
+	public void CanHideComplexityOfInstanceMembers(){
+		var config = new Config();
+		Assert.AreEqual( config.BadConstant, "pristine" );
+		config.SetBadConstant("dirty");
+		Assert.AreNotEqual( config.BadConstant, "pristine" );
+		Assert.AreEqual( config.BadConstant, "dirty" );
+	}
+}
+
+static class ConfigExtension{
+	static System.Reflection.FieldInfo field;
+	static ConfigExtension(){
+		field = typeof(Ex3_ExtensionMethods.Config).GetField("_badConstant", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+	}
+	public static void SetBadConstant(this Ex3_ExtensionMethods.Config self, string val ){
+		field.SetValue(self, val );
 	}
 }

@@ -1,9 +1,12 @@
-﻿using NUnit.Framework;
+﻿#define DEFINED
+
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Diagnostics;
 
-public class Ex2_MessageHandling {
+public class Ex2_Factory {
 
 	interface IHandler{
 		string Handle(string message);
@@ -16,6 +19,7 @@ public class Ex2_MessageHandling {
 			MessageType = messageType;		
 		}
 	}
+
 	[Handle("Foo")]
 	class FooHandler : IHandler{
 		public string Handle( string message ) {
@@ -49,7 +53,7 @@ public class Ex2_MessageHandling {
 
 	void CreateCache() {
 		// Do search for these private types only in this class
-		foreach ( var type in typeof( Ex2_MessageHandling ).GetNestedTypes(BindingFlags.NonPublic) ) {
+		foreach ( var type in typeof( Ex2_Factory ).GetNestedTypes(BindingFlags.NonPublic) ) {
 			if ( typeof(IHandler).IsAssignableFrom( type ) ) {
 				foreach ( Handle handle in type.GetCustomAttributes( typeof( Handle ), false ) ) {
 					messageTypesToHandler.Add( handle.MessageType, type );
@@ -65,7 +69,7 @@ public class Ex2_MessageHandling {
 		else
 			return new NullHandler();
 	}
-	public Ex2_MessageHandling(){
+	public Ex2_Factory(){
 		CreateCache();
 	}
 	[Test]
@@ -83,5 +87,34 @@ public class Ex2_MessageHandling {
 	[Test]
 	public void DoesNotDispatchToClassThatDoesNotInheritFromIHandler(){
 		Assert.IsInstanceOf<NullHandler>( GetHandler("Invalid") );
+	}
+
+}
+
+
+public class Ex2_ConditionalCompilation
+{
+	[Conditional("NOT_DEFINED")]
+	void NotDefinedMethod(){
+		throw new Exception();
+	}
+
+	[Conditional("DEFINED")]
+	void DefinedMethod(){
+		throw new Exception();
+	}
+
+	[Test]
+	public void NotDefinedIsNotCalled() {
+		Assert.DoesNotThrow( ()=>{
+			NotDefinedMethod();
+		});
+	}
+
+	[Test]
+	public void DefinedIsCalled() {
+		Assert.Throws<Exception>( ()=>{
+			DefinedMethod();
+		});
 	}
 }
